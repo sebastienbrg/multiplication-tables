@@ -1,0 +1,10 @@
+-- CreateTable
+CREATE TABLE "Result" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "username" TEXT NOT NULL,
+    "a" INTEGER NOT NULL,
+    "b" INTEGER NOT NULL,
+    "answer" INTEGER,
+    "correct" BOOLEAN NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

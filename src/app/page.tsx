@@ -1,80 +1,150 @@
 'use client';
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 const USERS = ["Nao", "Thaïs", "Papa", "Maman"];
+const TimeToRespond = 5; // seconds
 
 type QuizState =
   | { step: "select-user" }
-  | { step: "quiz"; user: string; a: number; b: number; answer: string; showResult: boolean; correct: boolean; timer: number };
-
-const TimeToRespond = 5; // seconds
+  | {
+    step: "quiz";
+    user: string;
+    questions: { a: number; b: number }[];
+    currentQuestionIndex: number;
+    errorCount: number;
+    correctCount: number;
+    perfectCount: number;
+    answer: string;
+    showResult: boolean;
+    correct: boolean;
+    timer: number;
+    resultSent: boolean;
+  };
 
 export default function Home() {
   const [state, setState] = useState<QuizState>({ step: "select-user" });
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
-  // Track if ready for next question
   const [readyForNext, setReadyForNext] = useState(false);
 
-  // Start quiz for selected user
-  const startQuiz = (user: string) => {
-    const a = Math.floor(Math.random() * 9) + 1;
-    const b = Math.floor(Math.random() * 9) + 1;
-    setState({ step: "quiz", user, a, b, answer: "", showResult: false, correct: false, timer: TimeToRespond });
-    setReadyForNext(false);
-    startTimer(user, a, b);
+  // Fetch a and b from backend
+  const fetchMultiplication = async (user: string) => {
+    const res = await fetch(`/api/multiplication?user=${encodeURIComponent(user)}`);
+    if (!res.ok) return { questions: [{ a: 1, b: 1 }] };
+    return res.json();
   };
 
-  // Modified timer logic with pause
-  const startTimer = (user: string, a: number, b: number) => {
-    let t = TimeToRespond;
+  // Send result to backend
+  const sendResult = async (username: string, a: number, b: number, answer: string, correct: boolean) => {
+    await fetch('/api/result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, a, b, answer, correct }),
+    });
+  };
+
+  // Start quiz for selected user
+  const startQuiz = async (user: string) => {
+    const { questions } = await fetchMultiplication(user);
+    setState({
+      step: "quiz",
+      user,
+      questions,
+      currentQuestionIndex: 0,
+      errorCount: 0,
+      correctCount: 0,
+      perfectCount: 0,
+      answer: "",
+      showResult: false,
+      correct: false,
+      timer: TimeToRespond,
+      resultSent: false,
+    });
+    setReadyForNext(false);
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (state.step !== "quiz" || state.showResult) return;
+    if (timeoutId) clearInterval(timeoutId);
     const id = setInterval(() => {
-      setState((prev) => {
-        if (prev.step === "quiz") {
-          t = prev.timer - 1;
-          if (t >= 0) {
-            return { ...prev, timer: t };
+      setState(prev => {
+        if (prev.step === "quiz" && !prev.showResult) {
+          if (prev.timer > 0) {
+            return { ...prev, timer: prev.timer - 1 };
+          } else {
+            return { ...prev, showResult: true, correct: false };
           }
         }
         return prev;
       });
-      if (t === 0) {
-        clearInterval(id);
-        setTimeoutId(null);
-        setState((prev) => {
-          if (prev.step === "quiz") {
-            return { ...prev, showResult: true, correct: false };
-          }
-          return prev;
-        });
-        setReadyForNext(true);
-      }
     }, 1000);
     setTimeoutId(id);
-  };
+    return () => clearInterval(id);
+    // eslint-disable-next-line
+  }, [state.step, (state as any).currentQuestionIndex, (state as any).showResult]);
 
+  // Send result effect
+  useEffect(() => {
+    if (state.step !== "quiz" || !state.showResult || state.resultSent) return;
+    const { a, b } = state.questions[state.currentQuestionIndex];
+    const correct = Number(state.answer) === a * b;
+    sendResult(state.user, a, b, state.answer, correct);
+    setState(prev => {
+      if (prev.step !== "quiz") return prev;
+      return {
+        ...prev,
+        errorCount: prev.errorCount + (!correct ? 1 : 0),
+        correctCount: prev.correctCount + (correct ? 1 : 0),
+        perfectCount: prev.perfectCount + (correct && prev.timer > TimeToRespond - 3 ? 1 : 0),
+        resultSent: true,
+      };
+    });
+    setReadyForNext(true);
+    // eslint-disable-next-line
+  }, [state.step, (state as any).showResult]);
 
   // Handle answer input
   const handleAnswer = (e: React.FormEvent) => {
     e.preventDefault();
-    if (state.step !== "quiz" || readyForNext) return;
-    if (timeoutId) clearInterval(timeoutId);
-    const correct = Number(state.answer) === state.a * state.b;
-    setState({ ...state, showResult: true, correct });
-    setReadyForNext(true);
+    if (state.step !== "quiz" || state.showResult) return;
+    const { a, b } = state.questions[state.currentQuestionIndex];
+    const correct = Number(state.answer) === a * b;
+    setState(prev => prev.step === "quiz"
+      ? { ...prev, showResult: true, correct }
+      : prev
+    );
   };
 
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (state.step !== "quiz") return;
-    setState({ ...state, answer: e.target.value });
+    setState(prev => prev.step === "quiz"
+      ? { ...prev, answer: e.target.value }
+      : prev
+    );
   };
 
   // Handle next question
   const handleNext = () => {
     if (state.step === "quiz") {
-      startQuiz(state.user);
+      if (state.currentQuestionIndex < state.questions.length - 1) {
+        setState(prev => prev.step === "quiz"
+          ? {
+            ...prev,
+            currentQuestionIndex: prev.currentQuestionIndex + 1,
+            answer: "",
+            showResult: false,
+            correct: false,
+            timer: TimeToRespond,
+            resultSent: false,
+          }
+          : prev
+        );
+        setReadyForNext(false);
+      } else {
+        setState({ step: "select-user" });
+        setReadyForNext(false);
+      }
     }
   };
 
@@ -84,11 +154,12 @@ export default function Home() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
         handleNext();
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line
   }, [readyForNext, state.step]);
 
   // UI rendering
@@ -96,7 +167,7 @@ export default function Home() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8">
         <h1 className="text-3xl font-bold mb-4">Qui s'entraine?</h1>
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-col " >
           {USERS.map((user) => (
             <button
               key={user}
@@ -112,21 +183,30 @@ export default function Home() {
   }
 
   if (state.step === "quiz") {
+    const totalQuestions = state.questions.length;
+    const currentIndex = state.currentQuestionIndex + 1;
+    const { a, b } = state.questions[state.currentQuestionIndex];
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8">
-        <h2 className="text-2xl font-semibold mb-2">{state.user}, calcul ça :</h2>
-
-        {(state.showResult) ? <div className="text-4xl font-bold mb-4">{state.a} × {state.b} = {state.a * state.b} </div> :
-          <div className="text-4xl font-bold mb-4">
-            {state.a} × {state.b} = ?
-          </div>
+        {/* Session widget */}
+        <div className="fixed top-4 right-4 bg-white/80 shadow px-4 py-2 rounded-lg border text-sm flex flex-col items-end">
+          <div>Question: <b>{currentIndex}</b> / {totalQuestions}</div>
+          <div>Perfect : <b>{state.perfectCount}</b></div>
+          <div>Correct : <b>{state.correctCount}</b></div>
+          <div>Erreurs: <b>{state.errorCount}</b></div>
+        </div>
+        <h2 className="text-2xl font-semibold mb-2">{state.user}, combien ça fait ?</h2>
+        {state.showResult
+          ? <div className="text-4xl font-bold mb-4">{a} × {b} = {a * b} </div>
+          : <div className="text-4xl font-bold mb-4">{a} × {b} = ?</div>
         }
-
         {!state.showResult ? (
           <form onSubmit={handleAnswer} className="flex flex-col items-center gap-4">
             <input
               type="number"
               className="border px-4 py-2 rounded text-xl w-32 text-center"
+              inputMode="numeric"
               value={state.answer}
               onChange={handleChange}
               autoFocus
@@ -140,23 +220,30 @@ export default function Home() {
           <>
             <div className="text-2xl mt-4">
               {state.correct ? (
-                <span className="text-green-600 font-bold">Correct!</span>
+                <span className="text-green-600 font-bold">{(state.timer > (TimeToRespond - 3)) ? "Perfect" : "Correct"}!</span>
               ) : (
                 <span className="text-red-600 font-bold">
-                  {state.answer !== '' && Number(state.answer) !== state.a * state.b
+                  {state.answer !== '' && Number(state.answer) !== a * b
                     ? 'Erreur !'
                     : `Trop tard ! `}
                 </span>
-
               )}
             </div>
-            <button
-              className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
-              onClick={handleNext}
-
-            >
-              Suivant
-            </button>
+            {state.currentQuestionIndex < (state.questions.length - 1) ? (
+              <button
+                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
+                onClick={handleNext}
+              >
+                Suivant
+              </button>
+            ) : (
+              <button
+                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
+                onClick={() => setState({ step: "select-user" })}
+              >
+                Terminer
+              </button>
+            )}
           </>
         )}
       </div>

@@ -1,0 +1,30 @@
+// Prisma schema for storing quiz results
+// Run `npx prisma migrate dev --name init` after editing
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  minTable  Int
+  maxTable  Int
+  results   Result[] @relation("UserResults")
+}
+
+model Result {
+  id        Int      @id @default(autoincrement())
+  username  String
+  a         Int
+  b         Int
+  answer    Int?
+  correct   Boolean
+  createdAt DateTime @default(now())
+  user      User?    @relation("UserResults", fields: [username], references: [name])
+}
