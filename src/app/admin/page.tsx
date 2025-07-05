@@ -5,6 +5,8 @@ interface User {
     name: string;
     minTable: number;
     maxTable: number;
+    password: string;
+    maxResponseTime: number;
 }
 
 const AdminPage: React.FC = () => {
@@ -14,6 +16,8 @@ const AdminPage: React.FC = () => {
     const [editUser, setEditUser] = useState<string | null>(null);
     const [minTable, setMinTable] = useState<number>(2);
     const [maxTable, setMaxTable] = useState<number>(9);
+    const [maxResponseTime, setMaxResponseTime] = useState<number>(9);
+    const [password, setPassword] = useState<string>('');
     const [addingUser, setAddingUser] = useState(false);
 
     const fetchUsers = async () => {
@@ -42,13 +46,15 @@ const AdminPage: React.FC = () => {
         setEditUser(user.name);
         setMinTable(user.minTable);
         setMaxTable(user.maxTable);
+        setPassword(user.password);
+        setMaxResponseTime(user.maxResponseTime);
     };
 
     const saveEdit = async (user: User) => {
         const res = await fetch("/api/users", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: user.name, minTable, maxTable }),
+            body: JSON.stringify({ name: user.name, minTable, maxTable, maxResponseTime, password }),
         });
         if (!res.ok) {
             alert("Failed to update user");
@@ -108,6 +114,8 @@ const AdminPage: React.FC = () => {
                             <th className="p-2">Nom</th>
                             <th className="p-2">minTable</th>
                             <th className="p-2">maxTable</th>
+                            <th className="p-2">Temps max (s)</th>
+                            <th className="p-2">Mot de passe</th>
                             <th className="p-2">Actions</th>
                         </tr>
                     </thead>
@@ -133,14 +141,42 @@ const AdminPage: React.FC = () => {
                                     {editUser === user.name ? (
                                         <input
                                             type="number"
-                                            min={minTable}
-                                            max={99}
+                                            min={2}
+                                            max={9}
                                             value={maxTable}
                                             onChange={e => setMaxTable(Number(e.target.value))}
                                             className="w-16 border rounded px-2"
                                         />
                                     ) : (
                                         user.maxTable
+                                    )}
+                                </td>
+                                <td className="p-2">
+                                    {editUser === user.name ? (
+                                        <input
+                                            type="number"
+                                            min={3}
+                                            max={12}
+                                            value={maxResponseTime}
+                                            onChange={e => setMaxResponseTime(Number(e.target.value))}
+                                            placeholder="Temps max (s)"
+                                            className="border rounded px-2 w-32"
+                                        />
+                                    ) : (
+                                        user.maxResponseTime
+                                    )}
+                                </td>
+                                <td className="p-2">
+                                    {editUser === user.name ? (
+                                        <input
+                                            type="text"
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            placeholder="Mot de passe"
+                                            className="border rounded px-2 w-40"
+                                        />
+                                    ) : (
+                                        "******"
                                     )}
                                 </td>
                                 <td className="p-2 flex gap-2">

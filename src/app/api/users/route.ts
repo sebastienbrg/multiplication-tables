@@ -60,13 +60,13 @@ export async function DELETE(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     try {
         const data = await req.json();
-        const { name, minTable, maxTable } = data;
+        const { name, minTable, maxTable, maxResponseTime, password } = data;
         if (!name || typeof minTable !== 'number' || typeof maxTable !== 'number') {
             return NextResponse.json({ error: 'Missing or invalid fields' }, { status: 400 });
         }
         const user = await prisma.user.update({
             where: { name },
-            data: { minTable, maxTable },
+            data: { minTable, maxTable, maxResponseTime, password },
         });
         return NextResponse.json(user);
     } catch (err: unknown) {
