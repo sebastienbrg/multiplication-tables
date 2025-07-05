@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-let prisma: PrismaClient = new PrismaClient();
+const prisma: PrismaClient = new PrismaClient();
 
 
 // Store a quiz result (POST)
@@ -22,7 +22,12 @@ export async function POST(req: NextRequest) {
             },
         });
         return NextResponse.json(result);
-    } catch (err: any) {
-        return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    }
+    catch (err: unknown) {
+        let message = 'Internal server error';
+        if (err instanceof Error) {
+            message = err.message;
+        }
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

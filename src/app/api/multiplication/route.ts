@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-let prisma: PrismaClient = new PrismaClient();
+const prisma: PrismaClient = new PrismaClient();
 
 const Session_Size = 20;
 const AddingNice = 5; //questions to add if not enough

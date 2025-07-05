@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 
 const USERS = ["Nao", "Thaïs", "Papa", "Maman"];
 const TimeToRespond = 9; // seconds
@@ -167,7 +167,7 @@ export default function Home() {
   if (state.step === "select-user") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8">
-        <h1 className="text-3xl font-bold mb-4">Qui s'entraine?</h1>
+        <h1 className="text-3xl font-bold mb-4">{"Qui s'entraine?"}</h1>
         <div className="flex gap-6 flex-col " >
           {USERS.map((user) => (
             <button
