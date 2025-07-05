@@ -7,6 +7,7 @@ const Session_Size = 20;
 const AddingNice = 5; //questions to add if not enough
 const MemoryLen = 7; //days
 
+
 // Return a random multiplication for a user
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -29,7 +30,6 @@ export async function GET(req: NextRequest) {
         _count: { correct: true },
 
     }).then(results => {
-        console.log(`Found ${results.length} results for user ${dbUser.name}`);
         const resultMap = new Map<number, { correctCount: number, errorCount: number }>();
         for (const result of results) {
             const key = result.a * 100 + result.b; // Unique key for each multiplication
