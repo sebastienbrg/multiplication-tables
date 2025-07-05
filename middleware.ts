@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export default function middleware(req: NextRequest) {
-    console.log("Middleware triggered for:", req.nextUrl.pathname);
-    return NextResponse.redirect(new URL('/password', req.url));
+const PASSWORD = process.env.SITE_PASSWORD;
+const COOKIE_NAME = 'site_auth';
+
+export function middleware(req: NextRequest) {
+    // Allow access to the password page and static files
+    if (
+        req.nextUrl.pathname.startsWith('/password') ||
+        req.nextUrl.pathname.startsWith('/_next') ||
+        req.nextUrl.pathname.startsWith('/api') ||
+        req.nextUrl.pathname.startsWith('/favicon.ico') ||
+        req.nextUrl.pathname.startsWith('/public')
+    ) {
+        return NextResponse.next();
+    }
+
+    const cookie = req.cookies.get(COOKIE_NAME)?.value;
+    if (cookie === PASSWORD) {
+        return NextResponse.next();
+    }
+
+    // Redirect to password page
+    const url = req.nextUrl.clone();
+    url.pathname = '/password';
+    return NextResponse.redirect(url);
 }
 
 export const config = {
-    matcher: ['/'],
+    matcher: ['/((?!_next|api|favicon.ico|public).*)'],
 };
