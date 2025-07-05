@@ -31,3 +31,20 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+
+// Delete all results for a user
+export async function DELETE(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const name = searchParams.get('name');
+        if (!name) {
+            return NextResponse.json({ error: 'Missing user name' }, { status: 400 });
+        }
+        await prisma.result.deleteMany({ where: { username: name } });
+        return NextResponse.json({ success: true });
+    } catch (err: unknown) {
+        let message = 'Internal server error';
+        if (err instanceof Error) message = err.message;
+        return NextResponse.json({ error: message }, { status: 500 });
+    }
+}
