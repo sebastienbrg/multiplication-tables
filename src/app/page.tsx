@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 const USERS = ["Nao", "Thaïs", "Papa", "Maman"];
-const TimeToRespond = 5; // seconds
+const TimeToRespond = 9; // seconds
+const PerfectResponseTime = 4; // seconds
 
 type QuizState =
   | { step: "select-user" }
@@ -95,7 +96,7 @@ export default function Home() {
         ...prev,
         errorCount: prev.errorCount + (!correct ? 1 : 0),
         correctCount: prev.correctCount + (correct ? 1 : 0),
-        perfectCount: prev.perfectCount + (correct && prev.timer > TimeToRespond - 3 ? 1 : 0),
+        perfectCount: prev.perfectCount + (correct && (prev.timer > (TimeToRespond - PerfectResponseTime)) ? 1 : 0),
         resultSent: true,
       };
     });
@@ -220,7 +221,7 @@ export default function Home() {
           <>
             <div className="text-2xl mt-4">
               {state.correct ? (
-                <span className="text-green-600 font-bold">{(state.timer > (TimeToRespond - 3)) ? "Perfect" : "Correct"}!</span>
+                <span className="text-green-600 font-bold">{(state.timer > (TimeToRespond - PerfectResponseTime)) ? "Perfect" : "Correct"}!</span>
               ) : (
                 <span className="text-red-600 font-bold">
                   {state.answer !== '' && Number(state.answer) !== a * b
@@ -237,12 +238,15 @@ export default function Home() {
                 Suivant
               </button>
             ) : (
-              <button
-                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
-                onClick={() => setState({ step: "select-user" })}
-              >
-                Terminer
-              </button>
+              <>
+                <h2>Score : {state.perfectCount * 3 + (state.correctCount - state.perfectCount) * 1}  (max : {state.questions.length * 3} )</h2>
+                <button
+                  className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
+                  onClick={() => setState({ step: "select-user" })}
+                >
+                  Terminer
+                </button>
+              </>
             )}
           </>
         )}

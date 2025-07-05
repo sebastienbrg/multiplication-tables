@@ -2,7 +2,7 @@
 // Run `npx prisma migrate dev --name init` after editing
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
