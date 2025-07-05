@@ -151,9 +151,9 @@ const AdminPage: React.FC = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <button className="px-2 py-1 bg-blue-500 text-white rounded" onClick={() => startEdit(user)}>✏️</button>
-                                            <button className="px-2 py-1 bg-red-500 text-white rounded" onClick={() => deleteUser(user.name)}>🗑️</button>
-                                            <button className="px-2 py-1 bg-yellow-500 text-white rounded" onClick={() => deleteResults(user.name)}>Effacer résultats</button>
+                                            <button className="px-2 py-1 text-white rounded" onClick={() => startEdit(user)}>✏️</button>
+                                            <button className="px-2 py-1 bg-grey-900 text-white rounded" onClick={() => deleteUser(user.name)}>🗑️</button>
+                                            <button className="px-2 py-1 bg-red-300 text-black rounded" onClick={() => deleteResults(user.name)}>Effacer résultats</button>
                                         </>
                                     )}
                                 </td>

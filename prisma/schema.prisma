@@ -15,6 +15,7 @@ model User {
   name      String @unique
   minTable  Int
   maxTable  Int
+  maxResponseTime Int @default(9)
   results   Result[] @relation("UserResults")
 }
 
@@ -26,5 +27,6 @@ model Result {
   answer    Int?
   correct   Boolean
   createdAt DateTime @default(now())
+  responseTime Int @default(9)
   user      User?    @relation("UserResults", fields: [username], references: [name])
 }
