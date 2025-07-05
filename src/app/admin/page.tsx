@@ -24,8 +24,12 @@ const AdminPage: React.FC = () => {
             if (!res.ok) throw new Error("Failed to fetch users");
             const data = await res.json();
             setUsers(data.users || []);
-        } catch (e: any) {
-            setError(e.message);
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                setError(e.message);
+            } else {
+                setError('Unknown error');
+            }
         }
         setLoading(false);
     };
@@ -147,9 +151,9 @@ const AdminPage: React.FC = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <button className="px-2 py-1 bg-blue-500 text-white rounded" onClick={() => startEdit(user)}>✏️</button>
-                                            <button className="px-2 py-1 bg-red-500 text-white rounded" onClick={() => deleteUser(user.name)}>🗑️</button>
-                                            <button className="px-2 py-1 bg-yellow-500 text-white rounded" onClick={() => deleteResults(user.name)}>Effacer résultats</button>
+                                            <button className="px-2 py-1 text-white rounded" onClick={() => startEdit(user)}>✏️</button>
+                                            <button className="px-2 py-1 bg-grey-900 text-white rounded" onClick={() => deleteUser(user.name)}>🗑️</button>
+                                            <button className="px-2 py-1 bg-red-300 text-black rounded" onClick={() => deleteResults(user.name)}>Effacer résultats</button>
                                         </>
                                     )}
                                 </td>
@@ -160,7 +164,7 @@ const AdminPage: React.FC = () => {
             )}
             <div key="add-user" className="mt-4">
                 {addingUser
-                    ? <><p className="text-lg text-gray-600">Nom d'utilisateur:</p>
+                    ? <><p className="text-lg text-gray-600">Nom d&apos;utilisateur:</p>
                         <input
                             type="text"
                             className="border px-4 py-2 rounded text-lg w-64"

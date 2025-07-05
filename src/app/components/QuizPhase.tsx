@@ -4,12 +4,11 @@ import { QuizState } from "../quizzState";
 interface QuizPhaseProps {
     state: QuizState;
     setState: (newState: QuizState | ((prevState: QuizState) => QuizState)) => void;
-    TimeToRespond: number;
 }
 
 const QuizPhase: React.FC<QuizPhaseProps> = ({
     state,
-    setState, TimeToRespond,
+    setState,
 }) => {
 
 
@@ -45,25 +44,6 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
     const totalQuestions = questions.length;
     const currentIndex = currentQuestionIndex + 1;
     const { a, b } = questions[currentQuestionIndex];
-
-    // Handle next question
-    const handleNext = () => {
-        if (currentQuestionIndex < questions.length - 1) {
-            setState((prev: QuizState) => ({
-                ...prev,
-                currentQuestionIndex: prev.currentQuestionIndex + 1,
-                answer: "",
-                showResult: false,
-                correct: false,
-                timer: TimeToRespond,
-                resultSent: false,
-                readyForNext: false,
-
-            })
-            );
-
-        }
-    };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen gap-8">

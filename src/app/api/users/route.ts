@@ -19,10 +19,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     try {
         const data = await req.json();
-        let { name, minTable, maxTable } = data;
+        const { name } = data;
         if (!name) {
             return NextResponse.json({ error: 'Missing or invalid fields' }, { status: 400 });
         }
+        let { minTable, maxTable } = data;
         if (typeof minTable !== 'number' || typeof maxTable !== 'number' || minTable < 2 || maxTable > 9 || minTable > maxTable) {
             minTable = 2;
             maxTable = 9;
