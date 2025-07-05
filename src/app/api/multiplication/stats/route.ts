@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     // Format: [{ a, b, total, correct }]
     const operations: { [op: string]: { correct: number, incorrect: number } } = {}
     stats.forEach(s => {
-        const count = (s._count as any)?._all ?? 0;
+        const count = (s._count as { _all: number })._all ?? 0;
         if (operations[`${s.a}x${s.b}`] === undefined) {
             operations[`${s.a}x${s.b}`] = { correct: 0, incorrect: 0 };
         }

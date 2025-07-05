@@ -24,8 +24,12 @@ const AdminPage: React.FC = () => {
             if (!res.ok) throw new Error("Failed to fetch users");
             const data = await res.json();
             setUsers(data.users || []);
-        } catch (e: any) {
-            setError(e.message);
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                setError(e.message);
+            } else {
+                setError('Unknown error');
+            }
         }
         setLoading(false);
     };
@@ -160,7 +164,7 @@ const AdminPage: React.FC = () => {
             )}
             <div key="add-user" className="mt-4">
                 {addingUser
-                    ? <><p className="text-lg text-gray-600">Nom d'utilisateur:</p>
+                    ? <><p className="text-lg text-gray-600">Nom d&apos;utilisateur:</p>
                         <input
                             type="text"
                             className="border px-4 py-2 rounded text-lg w-64"

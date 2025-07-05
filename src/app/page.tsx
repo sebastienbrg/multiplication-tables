@@ -182,7 +182,6 @@ export default function Home() {
       <QuizPhase
         state={state}
         setState={setState}
-        TimeToRespond={TimeToRespond}
       />
     );
   }

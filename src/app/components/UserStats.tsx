@@ -28,13 +28,6 @@ function getCellColor(stat?: Stat) {
     return `rgb(${r},${g},${b})`;
 }
 
-function getErrorRate(stat?: Stat) {
-    if (!stat || stat.correct + stat.incorrect === 0) return "-";
-    const total = stat.correct + stat.incorrect;
-    const errorRate = (stat.incorrect / total) * 100;
-    return `${errorRate.toFixed(0)}%`;
-}
-
 // Fetch user stats from API
 async function fetchUserStats(userName: string): Promise<{ operations: StatsData, minTable: number, maxTable: number }> {
     const res = await fetch(`/api/multiplication/stats?user=${encodeURIComponent(userName)}`);
