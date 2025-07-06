@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import UserStats from "./UserStats";
+import { AppState, User } from "../appState";
 
 interface SelectUserProps {
-    onSelect: (user: string) => void;
+    appState: AppState;
+    setAppState: (newState: AppState | ((prevState: AppState) => AppState)) => void;
 }
 
 const Loader = () => (
@@ -11,8 +13,9 @@ const Loader = () => (
     </div>
 );
 
-const SelectUser: React.FC<SelectUserProps> = ({ onSelect }) => {
-    const [users, setUsers] = useState<string[]>([]);
+
+const SelectUser: React.FC<SelectUserProps> = ({ setAppState }) => {
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [showStats, setShowStats] = useState<string | null>(null);
     // Fetch users from backend
@@ -26,7 +29,7 @@ const SelectUser: React.FC<SelectUserProps> = ({ onSelect }) => {
                 return;
             }
             const data = await res.json();
-            setUsers(data.users?.map((u: { name: string }) => u.name) || []);
+            setUsers(data.users);
             setLoading(false);
         };
         fetchUsers();
@@ -38,17 +41,24 @@ const SelectUser: React.FC<SelectUserProps> = ({ onSelect }) => {
         <h1 className="text-3xl font-bold mb-4">{"Qui s'entraine?"}</h1>
         <div className="flex gap-6 flex-col ">
             {loading ? <Loader /> : users.map((user) => (
-                <div key={user} className="flex items-center gap-2">
+                <div key={user.name} className="flex items-center gap-2">
                     <button
                         className="px-6 w-48 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
-                        onClick={() => onSelect(user)}
+                        onClick={() => {
+                            // Redirect to quiz page with selected user
+                            setAppState((prevState) => ({
+                                ...prevState,
+                                step: "quiz",
+                                user
+                            }));
+                        }}
                     >
-                        {user}
+                        {user.name}
                     </button>
                     <button
                         className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-blue-700 text-xl"
                         title="Voir les stats"
-                        onClick={() => setShowStats(user)}
+                        onClick={() => setShowStats(user.name)}
                     >
                         📊
                     </button>

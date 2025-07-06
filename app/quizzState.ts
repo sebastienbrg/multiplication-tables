@@ -1,6 +1,4 @@
 export type QuizState = {
-    step: "quiz" | "select-user";
-    user: string | null;
     questions: { a: number; b: number }[];
     currentQuestionIndex: number;
     errorCount: number;
@@ -12,4 +10,5 @@ export type QuizState = {
     timer: number;
     resultSent: boolean;
     readyForNext: boolean;
+    running: boolean;
 };

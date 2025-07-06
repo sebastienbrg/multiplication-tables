@@ -22,11 +22,13 @@ export async function GET(req: NextRequest) {
     }
     const questions: { a: number, b: number, sortKey?: number }[] = [];
 
+    // Create a new test session
+    const testSession = await prisma.testSession.create({ data: { userId: dbUser.id, } });
 
     // Grab all results for this user
     return prisma.result.groupBy({
         by: ['a', 'b', 'correct'],
-        where: { username: dbUser.name, createdAt: { gte: new Date(Date.now() - 24 * MemoryLen * 60 * 60 * 1000) } },
+        where: { userId: dbUser.id, createdAt: { gte: new Date(Date.now() - 24 * MemoryLen * 60 * 60 * 1000) } },
         _count: { correct: true },
 
     }).then(results => {
@@ -92,7 +94,7 @@ export async function GET(req: NextRequest) {
             delete q.sortKey; // Remove sortKey before returning    
         }
         );
-        return NextResponse.json({ questions: questions.slice(0, Session_Size) }, { status: 200 });
+        return NextResponse.json({ questions: questions.slice(0, Session_Size), testSessionId: testSession.id }, { status: 200 });
     });
 
 

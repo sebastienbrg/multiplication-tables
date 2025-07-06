@@ -18,16 +18,31 @@ model User {
   maxResponseTime Int @default(9)
   password  String @default("")
   results   Result[] @relation("UserResults")
+
+  TestSession TestSession[] @relation("UserResults")
+}
+
+model TestSession {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User    @relation("UserResults", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  meanResponseTime Float ? @default(9.0)
+  results   Result[] @relation("TestSessionResults")
+  correctCount Int @default(0)
+  incorrectCount Int @default(0)
 }
 
 model Result {
   id        Int      @id @default(autoincrement())
-  username  String
+  userId   Int
   a         Int
   b         Int
   answer    Int?
   correct   Boolean
   createdAt DateTime @default(now())
   responseTime Int @default(9)
-  user      User?    @relation("UserResults", fields: [username], references: [name])
+  testSessionId Int
+  testSession TestSession @relation("TestSessionResults", fields: [testSessionId], references: [id])
+  user      User    @relation("UserResults", fields: [userId], references: [id])
 }
