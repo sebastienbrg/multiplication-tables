@@ -12,4 +12,5 @@ export type QuizState = {
     readyForNext: boolean;
     running: boolean;
     testSessionId: number
+    score: number;
 };

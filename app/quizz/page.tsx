@@ -25,7 +25,8 @@ const InitialQuizState: QuizState = {
     resultSent: false,
     readyForNext: false,
     running: false,
-    testSessionId: 0
+    testSessionId: 0,
+    score: 0
 };
 
 export function getInitialQuizzState(timeToRespond: number): QuizState {
@@ -39,11 +40,11 @@ export function getInitialQuizzState(timeToRespond: number): QuizState {
 const QuizPhase: React.FC<QuizPhaseProps> = ({
     appState,
     quizzState,
+    setAppState,
     setQuizzState: setState
 }) => {
     // Handle input change
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-
         setState(prev => ({ ...prev, answer: e.target.value }));
     };
     // Handle answer input
@@ -51,7 +52,8 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
         e.preventDefault();
         const { a, b } = quizzState.questions[quizzState.currentQuestionIndex];
         const correct = Number(quizzState.answer) === a * b;
-        setState(prev => ({ ...prev, showResult: true, correct }));
+        const scoreBonus = correct ? quizzState.timer : 0;
+        setState(prev => ({ ...prev, showResult: true, correct, score: prev.score + scoreBonus }));
     };
     const { questions,
         currentQuestionIndex,
@@ -74,17 +76,23 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
     };
 
     // Send result to backend
-    const sendResult = async (userId: number, a: number, b: number, answer: string, correct: boolean) => {
+    const sendResult = async (userId: number,
+        a: number,
+        b: number,
+        answer: string,
+        correct: boolean,
+        responseTime: number
+    ) => {
         await fetch('/api/result', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, a, b, answer, correct, testSessionId }),
+            body: JSON.stringify({ userId, a, b, answer, correct, testSessionId, responseTime }),
         });
     };
 
     // Start quiz for selected user
     const startQuiz = async (user: User) => {
-        const newQuizz = getInitialQuizzState(appState.userMaxTimeToRespond)
+        const newQuizz = getInitialQuizzState(user.maxResponseTime)
         const { questions, testSessionId } = await fetchMultiplication(user);
         newQuizz.testSessionId = testSessionId;
         newQuizz.questions = questions;
@@ -119,18 +127,23 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
         if (quizzState.questions.length === 0) return;
         const { a, b } = quizzState.questions[quizzState.currentQuestionIndex];
         const correct = Number(quizzState.answer) === a * b;
-        if (appState.user)
-            sendResult(appState.user.id || 0, a, b, quizzState.answer, correct);
-        setState(prev => {
-            return {
-                ...prev,
-                errorCount: prev.errorCount + (!correct ? 1 : 0),
-                correctCount: prev.correctCount + (correct ? 1 : 0),
-                perfectCount: prev.perfectCount + (correct && (prev.timer > (appState.userMaxTimeToRespond - PerfectResponseTime)) ? 1 : 0),
-                resultSent: true,
-                readyForNext: true
-            };
-        });
+        if (appState.user) {
+            sendResult(appState.user.id || 0, a, b,
+                quizzState.answer,
+                correct,
+                appState.user.maxResponseTime - quizzState.timer
+            );
+            setState(prev => {
+                return {
+                    ...prev,
+                    errorCount: prev.errorCount + (!correct ? 1 : 0),
+                    correctCount: prev.correctCount + (correct ? 1 : 0),
+                    perfectCount: prev.perfectCount + (correct && (prev.timer > ((appState.user?.maxResponseTime || 9) - PerfectResponseTime)) ? 1 : 0),
+                    resultSent: true,
+                    readyForNext: true
+                };
+            });
+        }
 
         // eslint-disable-next-line
     }, [quizzState.showResult]);
@@ -140,15 +153,20 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
 
     // Handle next question
     const handleNext = () => {
-
-        if (quizzState.currentQuestionIndex < quizzState.questions.length - 1) {
+        if (quizzState.currentQuestionIndex >= (quizzState.questions.length - 1)) {
+            setAppState(prev => ({
+                ...prev,
+                step: "result"
+            }));
+        }
+        else {
             setState(prev => ({
                 ...prev,
                 currentQuestionIndex: prev.currentQuestionIndex + 1,
                 answer: "",
                 showResult: false,
                 correct: false,
-                timer: appState.userMaxTimeToRespond,
+                timer: appState.user?.maxResponseTime || 9,
                 resultSent: false,
                 readyForNext: false,
             }));
@@ -193,8 +211,27 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
         );
     }
 
+    const QuestionResultViewer = () => {
+        if (!quizzState.showResult) return null;
+        return <><div className="text-4xl font-bold mb-4">{a} × {b} = {a * b} </div>
+            {quizzState.timer <= 0 && <div className="text-red-600">{"Temps écoulé !"}</div>}
+            {((quizzState.timer > 0) && quizzState.correct) && (
+                <><div className="text-green-600">{"Bonne réponse !"}</div>
+                    <div className="text-gray-500 mt-2">
+                        Score + {quizzState.timer} point
+                    </div>
+                </>
+            )}
+            {(quizzState.timer > 0) && !quizzState.correct && (
+                <div className="text-red-600">{"Mauvaise réponse !"}</div>
+            )
+            }
+        </>
+    };
+
 
     const { a, b } = questions[currentQuestionIndex];
+
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen gap-8">
@@ -205,12 +242,14 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
             />
 
             {showResult
-                && <><div className="text-4xl font-bold mb-4">{a} × {b} = {a * b} </div>
+                && <>
+                    <QuestionResultViewer />
+
                     <button
                         className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
                         onClick={handleNext}
                     >
-                        {quizzState.currentQuestionIndex < quizzState.questions.length - 1 ? "Question suivante (<Enter>)" : "Terminer le quiz"}
+                        {(quizzState.currentQuestionIndex < quizzState.questions.length - 1) ? "Question suivante (<Enter>)" : "Terminer le quiz"}
                     </button>
                 </>
             }

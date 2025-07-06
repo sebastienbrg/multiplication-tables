@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma: PrismaClient = new PrismaClient();
 
-const Session_Size = 20;
+const Session_Size = 4;
 const AddingNice = 5; //questions to add if not enough
 const MemoryLen = 7; //days
 

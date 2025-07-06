@@ -20,6 +20,7 @@ const SessionWidget: React.FC<SessionWidgetProps> = ({ quizzState, appState }) =
             <div>Perfect : <b>{quizzState.perfectCount}</b></div>
             <div>Correct : <b>{quizzState.correctCount}</b></div>
             <div>Erreurs: <b>{quizzState.errorCount}</b></div>
+            <div> Score : <b>{quizzState.score}</b></div>
             {appState.user && (
                 <button
                     className="mt-2 text-blue-600 hover:underline"

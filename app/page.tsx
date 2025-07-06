@@ -12,13 +12,12 @@ const TimeToRespond = 9; // seconds
 
 const InitialAppState: AppState = {
   step: "select-user",
-  user: null,
-  userMaxTimeToRespond: TimeToRespond,
+  user: null
 };
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>({ ...InitialAppState });
-  const [quizzState, setQuizzState] = React.useState<QuizState>(getInitialQuizzState(appState.userMaxTimeToRespond));
+  const [quizzState, setQuizzState] = React.useState<QuizState>(getInitialQuizzState(appState.user?.maxResponseTime || TimeToRespond));
 
   // UI rendering
   if (appState.step === "select-user") {
@@ -36,9 +35,19 @@ export default function Home() {
   } else if (appState.step === "result") {
     return <ResultPhase
       quizzState={quizzState}
+      appState={appState}
+      onRestart={() => {
+        setAppState(prev => ({
+          ...prev,
+          step: "quiz",
+        }));
+
+        const newQuizState = getInitialQuizzState(appState.user?.maxResponseTime || TimeToRespond);
+        setQuizzState(newQuizState);
+      }}
       onFinish={() => {
         setAppState(InitialAppState);
-        setQuizzState(getInitialQuizzState(appState.userMaxTimeToRespond));
+        setQuizzState(getInitialQuizzState(appState.user?.maxResponseTime || TimeToRespond));
       }}
     />;
   }
