@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma: PrismaClient = new PrismaClient();
 
-const Session_Size = 4;
+const Session_Size = 20;
 const AddingNice = 5; //questions to add if not enough
-const MemoryLen = 7; //days
+const MemoryLen = 14; //days
 
 
 // Return a random multiplication for a user

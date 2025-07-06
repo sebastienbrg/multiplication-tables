@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { AppState, User } from "../appState";
 import { QuizState } from "../quizzState";
-import SessionWidget from "../components/SessionWdget";
+import SessionWidget from "./SessionWdget";
 const PerfectResponseTime = 4; // seconds
 
 interface QuizPhaseProps {

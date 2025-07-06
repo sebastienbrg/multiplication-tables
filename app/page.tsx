@@ -4,7 +4,7 @@ import SelectUser from "./components/SelectUser";
 
 import ResultPhase from "./components/ResultPhase";
 import { AppState } from "./appState";
-import QuizPhase, { getInitialQuizzState } from "./quizz/page";
+import QuizPhase, { getInitialQuizzState } from "./components/quizzComponant";
 import { QuizState } from "./quizzState";
 
 const TimeToRespond = 9; // seconds
