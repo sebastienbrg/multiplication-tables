@@ -25,6 +25,7 @@ const InitialQuizState: QuizState = {
     resultSent: false,
     readyForNext: false,
     running: false,
+    testSessionId: 0
 };
 
 export function getInitialQuizzState(timeToRespond: number): QuizState {
@@ -57,6 +58,7 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
         currentQuestionIndex,
         answer,
         showResult,
+        testSessionId,
         timer } = quizzState;
 
     const { user } = appState;
@@ -66,25 +68,26 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
 
 
     // Fetch a and b from backend
-    const fetchMultiplication = async (user: string) => {
-        const res = await fetch(`/api/multiplication?user=${encodeURIComponent(user)}`);
-        if (!res.ok) return { questions: [{ a: 1, b: 1 }] };
+    const fetchMultiplication = async (user: User) => {
+        const res = await fetch(`/api/multiplication?userId=${user.id}`);
+        if (!res.ok) return { questions: [{ a: 1, b: 1 }], testSessionId: null };
         return res.json();
     };
 
     // Send result to backend
-    const sendResult = async (username: string, a: number, b: number, answer: string, correct: boolean) => {
+    const sendResult = async (userId: number, a: number, b: number, answer: string, correct: boolean) => {
         await fetch('/api/result', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, a, b, answer, correct }),
+            body: JSON.stringify({ userId, a, b, answer, correct, testSessionId }),
         });
     };
 
     // Start quiz for selected user
     const startQuiz = async (user: User) => {
         const newQuizz = getInitialQuizzState(appState.userMaxTimeToRespond)
-        const { questions } = await fetchMultiplication(user.name);
+        const { questions, testSessionId } = await fetchMultiplication(user);
+        newQuizz.testSessionId = testSessionId;
         newQuizz.questions = questions;
         return setState(newQuizz);
     };
@@ -118,7 +121,7 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
         const { a, b } = quizzState.questions[quizzState.currentQuestionIndex];
         const correct = Number(quizzState.answer) === a * b;
         if (appState.user)
-            sendResult(appState.user.name || '', a, b, quizzState.answer, correct);
+            sendResult(appState.user.id || 0, a, b, quizzState.answer, correct);
         setState(prev => {
             return {
                 ...prev,

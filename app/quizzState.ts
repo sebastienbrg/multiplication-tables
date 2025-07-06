@@ -11,4 +11,5 @@ export type QuizState = {
     resultSent: boolean;
     readyForNext: boolean;
     running: boolean;
+    testSessionId: number
 };

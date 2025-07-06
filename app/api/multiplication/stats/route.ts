@@ -3,22 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma: PrismaClient = new PrismaClient();
 
-// GET /api/multiplication/stats?user=username
+// GET /api/multiplication/stats?user=userId
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const username = searchParams.get('user');
-    if (!username) {
-        return NextResponse.json({ error: 'Missing user' }, { status: 400 });
+    const userIdParam = searchParams.get('userId');
+    if (!userIdParam) {
+        return NextResponse.json({ error: 'Missing user id' }, { status: 400 });
+    }
+    const userId = Number(userIdParam);
+    if (isNaN(userId)) {
+        return NextResponse.json({ error: 'Invalid user id' }, { status: 400 });
     }
     // Retrieve user from DB
-    const dbUser = await prisma.user.findUnique({ where: { name: username } });
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!dbUser) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     // Group by a, b and get correct/total counts
     const stats = await prisma.result.groupBy({
         by: ['a', 'b', 'correct'],
-        where: { username },
+        where: { user: dbUser },
         _count: { _all: true },
     });
     // Format: [{ a, b, total, correct }]

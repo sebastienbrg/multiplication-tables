@@ -43,11 +43,15 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const name = searchParams.get('name');
-        if (!name) {
+        const userIdParam = searchParams.get('userId');
+        if (!userIdParam) {
             return NextResponse.json({ error: 'Missing user name' }, { status: 400 });
         }
-        await prisma.user.delete({ where: { name } });
+        const userId = Number(userIdParam);
+        if (isNaN(userId)) {
+            return NextResponse.json({ error: 'Invalid user id' }, { status: 400 });
+        }
+        await prisma.user.delete({ where: { id: userId } });
         return NextResponse.json({ success: true });
     } catch (err: unknown) {
         let message = 'Internal server error';

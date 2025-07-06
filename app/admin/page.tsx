@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 
 interface User {
+    id: number;
     name: string;
     minTable: number;
     maxTable: number;
@@ -64,9 +65,9 @@ const AdminPage: React.FC = () => {
         fetchUsers();
     };
 
-    const deleteUser = async (name: string) => {
-        if (!confirm(`Supprimer l'utilisateur ${name} ?`)) return;
-        const res = await fetch(`/api/users?name=${encodeURIComponent(name)}`, { method: "DELETE" });
+    const deleteUser = async (user: User) => {
+        if (!confirm(`Supprimer l'utilisateur ${user.name} ?`)) return;
+        const res = await fetch(`/api/users?userId=${(user.id)}`, { method: "DELETE" });
         if (!res.ok) {
             alert("Failed to delete user");
             return;
@@ -74,9 +75,9 @@ const AdminPage: React.FC = () => {
         fetchUsers();
     };
 
-    const deleteResults = async (name: string) => {
-        if (!confirm(`Supprimer tous les résultats de ${name} ?`)) return;
-        const res = await fetch(`/api/result?name=${encodeURIComponent(name)}`, { method: "DELETE" });
+    const deleteResults = async (user: User) => {
+        if (!confirm(`Supprimer tous les résultats de ${user.name} ?`)) return;
+        const res = await fetch(`/api/result?userId=${user.id}`, { method: "DELETE" });
         if (!res.ok) {
             alert("Failed to delete results");
             return;
@@ -188,8 +189,8 @@ const AdminPage: React.FC = () => {
                                     ) : (
                                         <>
                                             <button className="px-2 py-1 text-white rounded" onClick={() => startEdit(user)}>✏️</button>
-                                            <button className="px-2 py-1 bg-grey-900 text-white rounded" onClick={() => deleteUser(user.name)}>🗑️</button>
-                                            <button className="px-2 py-1 bg-red-300 text-black rounded" onClick={() => deleteResults(user.name)}>Effacer résultats</button>
+                                            <button className="px-2 py-1 bg-grey-900 text-white rounded" onClick={() => deleteUser(user)}>🗑️</button>
+                                            <button className="px-2 py-1 bg-red-300 text-black rounded" onClick={() => deleteResults(user)}>Effacer résultats</button>
                                         </>
                                     )}
                                 </td>

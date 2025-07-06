@@ -17,7 +17,7 @@ const Loader = () => (
 const SelectUser: React.FC<SelectUserProps> = ({ setAppState }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showStats, setShowStats] = useState<string | null>(null);
+    const [showStatsForUser, setShowStatsForUser] = useState<User | null>(null);
     // Fetch users from backend
     useEffect(() => {
         const fetchUsers = async () => {
@@ -58,7 +58,7 @@ const SelectUser: React.FC<SelectUserProps> = ({ setAppState }) => {
                     <button
                         className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-blue-700 text-xl"
                         title="Voir les stats"
-                        onClick={() => setShowStats(user.name)}
+                        onClick={() => setShowStatsForUser(user)}
                     >
                         📊
                     </button>
@@ -66,21 +66,21 @@ const SelectUser: React.FC<SelectUserProps> = ({ setAppState }) => {
             ))}
         </div>
 
-        {showStats && (
+        {showStatsForUser && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
                 <div
                     className="fixed inset-0 bg-black bg-opacity-40"
-                    onClick={() => setShowStats(null)}
+                    onClick={() => setShowStatsForUser(null)}
                 />
                 <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 max-w-2xl w-full max-h-[90vh] overflow-auto">
                     <button
                         className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
-                        onClick={() => setShowStats(null)}
+                        onClick={() => setShowStatsForUser(null)}
                         title="Fermer"
                     >
                         ×
                     </button>
-                    <UserStats userName={showStats} />
+                    <UserStats user={showStatsForUser} />
                 </div>
             </div>
         )}

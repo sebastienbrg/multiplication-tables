@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { User } from "../appState";
 
 type UserStatsProps = {
-    userName: string;
+    user: User;
 };
 
 type Stat = {
@@ -30,15 +31,15 @@ function getCellColor(stat?: Stat) {
 
 
 // Fetch user stats from API
-async function fetchUserStats(userName: string): Promise<{ operations: StatsData, minTable: number, maxTable: number }> {
-    const res = await fetch(`/api/multiplication/stats?user=${encodeURIComponent(userName)}`);
+async function fetchUserStats(userId: number): Promise<{ operations: StatsData, minTable: number, maxTable: number }> {
+    const res = await fetch(`/api/multiplication/stats?userId=${userId}`);
     if (!res.ok) return { operations: {}, minTable: 2, maxTable: 10 };
     const data = await res.json();
     // API returns operations as an object already
     return { operations: data.operations, minTable: data.minTable, maxTable: data.maxTable };
 }
 
-const UserStats: React.FC<UserStatsProps> = ({ userName }) => {
+const UserStats: React.FC<UserStatsProps> = ({ user }) => {
     const [stats, setStats] = useState<StatsData>({});
     const [loading, setLoading] = useState(true);
     const [maxTable, setMaxTable] = useState(10);
@@ -46,13 +47,13 @@ const UserStats: React.FC<UserStatsProps> = ({ userName }) => {
 
     useEffect(() => {
         setLoading(true);
-        fetchUserStats(userName).then((data: { operations: StatsData, minTable: number, maxTable: number }) => {
+        fetchUserStats(user.id).then((data: { operations: StatsData, minTable: number, maxTable: number }) => {
             setStats(data.operations);
             setMaxTable(data.maxTable || 10);
             setMinTable(data.minTable || 2);
             setLoading(false);
         });
-    }, [userName]);
+    }, [user.id]);
 
     const rows = [];
     for (let i = minTable; i <= maxTable; i++) {
@@ -91,7 +92,7 @@ const UserStats: React.FC<UserStatsProps> = ({ userName }) => {
 
     return (
         <div>
-            <h3>Stats pour <span style={{ color: "#1976d2" }}>{userName}</span></h3>
+            <h3>Stats pour <span style={{ color: "#1976d2" }}>{user.name}</span></h3>
             {loading ? (
                 <div>Loading...</div>
             ) : (
