@@ -38,7 +38,6 @@ export function getInitialQuizzState(timeToRespond: number): QuizState {
 
 const QuizPhase: React.FC<QuizPhaseProps> = ({
     appState,
-    setAppState,
     quizzState,
     setQuizzState: setState
 }) => {

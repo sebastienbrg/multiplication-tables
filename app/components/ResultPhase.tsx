@@ -1,5 +1,4 @@
 import React from "react";
-import { AppState } from "../appState";
 import { QuizState } from "../quizzState";
 
 interface ResultPhaseProps {
