@@ -195,7 +195,7 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
 
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen gap-8">
+        <div className="flex flex-col mt-[62px] md:mt-[0px] items-center justify-top md:justify-center min-h-screen gap-8">
             {/* Session widget */}
             <SessionWidget
                 quizzState={quizzState}
@@ -216,10 +216,10 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
             }
             {!showResult ? (
                 <>
-                    <h2 className="text-2xl font-semibold mb-2">{user?.name}, combien ça fait ?</h2>
-                    <div className="text-4xl font-bold mb-4">{a} × {b} = ?</div>
+                    <h2 className="text-2xl font-semibold mb-2 hidden md:block">{user?.name}, combien ça fait ?</h2>
+                    <TimerAnimation onTrigger={onTrigger} duration={user?.maxResponseTime || 9} questionStartTime={questionStartTime} />
+                    <div className="text-4xl font-bold mb-04">{a} × {b} = ?</div>
                     <form onSubmit={onAnswer} className="flex flex-col items-center gap-4">
-                        <TimerAnimation onTrigger={onTrigger} duration={user?.maxResponseTime || 9} questionStartTime={questionStartTime} />
 
                         <input
                             type="number"
