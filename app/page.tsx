@@ -7,7 +7,6 @@ import { AppState } from "./appState";
 import QuizPhase, { getInitialQuizzState } from "./components/quizzComponant";
 import { QuizState } from "./quizzState";
 
-const TimeToRespond = 9; // seconds
 
 
 const InitialAppState: AppState = {

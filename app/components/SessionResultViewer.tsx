@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { QuizState } from "../quizzState";
-import { AppState } from "../appState";
+import { AppState, User } from "../appState";
 import { Stat, StatsData } from "./StatsData";
 import { Loader } from "./Loader";
 import TableOfTables from "./TableOfTables";
 import { getDisplayTextResponseTime, getMarginDisplay } from "../tools/statsDisplayTools";
 import clsx from "clsx";
 import { getScorePointsForAnswer } from "./getScorePointsForAnswer";
-const TargetResponseTime = 3; // seconds, used to calculate the target score
+import UserStats from "./UserStats";
+
 interface ResultPhaseProps {
     appState: AppState;
     quizzState: QuizState;
@@ -24,6 +25,7 @@ const SessionResultViewer: React.FC<ResultPhaseProps> = ({
     const [quizzStats, setQuizzStats] = useState<StatsData | null>(null);
     const [sessionStats, setSessionStats] = useState<{ correctCount: number, incorrectCount: number, meanResponseTime: number } | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showStats, setShowStats] = useState<User | null>(null);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -82,7 +84,7 @@ const SessionResultViewer: React.FC<ResultPhaseProps> = ({
                     quizzState.score >= targetScore && "text-green-600 animate-bounce",
                 )}
             >
-                Score : {quizzState.score}  (Objectif : {targetScore})
+                Score : {Math.round(quizzState.score)}  (Objectif : {targetScore})
             </div>
 
             {(loading) ? <Loader /> : <>
@@ -102,21 +104,44 @@ const SessionResultViewer: React.FC<ResultPhaseProps> = ({
                     getDisplayText={getDisplayText}
                 />
             </>}
+            <button
+                className="w-48 px-2 py-1 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
+                onClick={() => setShowStats(appState.user ? appState.user : null)}
+            >
+                {showStats ? "Cacher les stats" : "Voir les stats"}
+            </button>
 
             <button
-                className="mt-6 w-48 px-6 py-3 bg-green-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
+                className=" w-48 px-2 py-1 bg-green-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
                 onClick={onRestart}
             >
                 Nouvelle session
             </button>
             <button
-                className="mt-6 w-48 px-6 py-3 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
+                className="w-48 px-2 py-1 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
                 onClick={onFinish}
             >
                 Terminer
             </button>
         </>
-
+        {showStats && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-40"
+                    onClick={() => setShowStats(null)}
+                />
+                <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 max-w-2xl w-full max-h-[90vh] overflow-auto">
+                    <button
+                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+                        onClick={() => setShowStats(null)}
+                        title="Fermer"
+                    >
+                        ×
+                    </button>
+                    <UserStats user={showStats} />
+                </div>
+            </div>
+        )}
     </div>
 };
 

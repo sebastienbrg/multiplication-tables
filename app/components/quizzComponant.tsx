@@ -6,7 +6,6 @@ import { QuizState } from "../quizzState";
 import SessionWidget from "./SessionWdget";
 import TimerAnimation from "./TimerAnimation";
 import QuestionResultViewer from "./QuestionResultViewer";
-import { get } from "http";
 import { getScorePointsForAnswer } from "./getScorePointsForAnswer";
 const PerfectResponseTime = 4; // seconds
 

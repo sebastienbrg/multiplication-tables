@@ -41,7 +41,7 @@ const TimerAnimation = ({ duration, questionStartTime, onTrigger }: TimerAnimati
         return () => {
             if (intervalRef.current) clearTimeout(intervalRef.current);
         };
-    }, [duration, questionStartTime, onTrigger, timerValue]);
+    }, [duration, questionStartTime, onTrigger, timerValue, running]);
 
     const percent = Math.max(0, timerValue / duration);
     const radius = 50;
