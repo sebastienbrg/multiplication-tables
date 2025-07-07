@@ -27,6 +27,7 @@ const SessionResultViewer: React.FC<ResultPhaseProps> = ({
     const [loading, setLoading] = useState(true);
     const [showStats, setShowStats] = useState<User | null>(null);
 
+
     useEffect(() => {
         const fetchStats = async () => {
             try {
@@ -96,20 +97,33 @@ const SessionResultViewer: React.FC<ResultPhaseProps> = ({
                     </div>
 
                 </div>
-                <TableOfTables
-                    user={appState.user}
-                    stats={quizzStats || {}}
-                    getCellColor={getCellColor}
-                    loading={loading}
-                    getDisplayText={getDisplayText}
-                />
+                <div key="toggleStatsSession" className="text-lg text-gray-700 mb-4">
+                    <input
+                        type="checkbox"
+                        id="toggleStatsSession"
+                        className="mr-2"
+                        checked={!!showStats}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setShowStats(appState.user);
+                            } else {
+                                setShowStats(null);
+                            }
+                        }}
+                    />
+                    <label htmlFor="toggleStatsSession">Afficher les stats de l'utilisateur</label>
+                </div>
+                <div className="overflow-x-auto flex">
+                    <TableOfTables
+                        user={appState.user}
+                        stats={quizzStats || {}}
+                        getCellColor={getCellColor}
+                        loading={loading}
+                        getDisplayText={getDisplayText}
+                    />
+                    {showStats && <div className="ml-2"><UserStats user={showStats} /></div>}
+                </div>
             </>}
-            <button
-                className="w-48 px-2 py-1 bg-blue-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
-                onClick={() => setShowStats(appState.user ? appState.user : null)}
-            >
-                {showStats ? "Cacher les stats" : "Voir les stats"}
-            </button>
 
             <button
                 className=" w-48 px-2 py-1 bg-green-600 text-white rounded-lg text-lg hover:bg-blue-700 transition"
@@ -124,24 +138,6 @@ const SessionResultViewer: React.FC<ResultPhaseProps> = ({
                 Terminer
             </button>
         </>
-        {showStats && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-40"
-                    onClick={() => setShowStats(null)}
-                />
-                <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 max-w-2xl w-full max-h-[90vh] overflow-auto">
-                    <button
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
-                        onClick={() => setShowStats(null)}
-                        title="Fermer"
-                    >
-                        ×
-                    </button>
-                    <UserStats user={showStats} />
-                </div>
-            </div>
-        )}
     </div>
 };
 
