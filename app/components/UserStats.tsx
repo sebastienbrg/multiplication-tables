@@ -38,20 +38,31 @@ const UserStats: React.FC<UserStatsProps> = ({ user }) => {
     // };
     const getDisplayText = useCallback((stat: Stat) => {
         if (!user) {
-            return "-";
+            return <span className="text-gray-700 text-base text-md">
+                {"-"}
+            </span>;
         }
         if (mode === "correctOrNot") {
-            return stat ? `${stat.correct} / ${stat.correct + stat.incorrect}` : "-";
+            return <span className="text-gray-700 text-base lg:text-sm">
+                {stat ? `${stat.correct}/${stat.correct + stat.incorrect}` : "-"}
+            </span>
         }
         return getDisplayTextResponseTime(stat, user);
     }, [user, mode]);
 
     return (
         <div>
+            <TableOfTables
+                user={user}
+                stats={stats}
+                getCellColor={getCellColorErrorRate}
+                getDisplayText={getDisplayText}
+                loading={loading}
+            />
             <h3>
                 Stats pour <span className="text-blue-600">{user.name}</span>
             </h3>
-            <div className="mb-4">
+            <div className="flex flex-row mt-4">
                 <button
                     className={`px-4 py-2 mr-2 rounded ${mode === "responseTime" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
                     onClick={() => setMode("responseTime")}
@@ -64,18 +75,6 @@ const UserStats: React.FC<UserStatsProps> = ({ user }) => {
                 >
                     Bonnes réponses
                 </button>
-            </div>
-            <TableOfTables
-                user={user}
-                stats={stats}
-                getCellColor={getCellColorErrorRate}
-                getDisplayText={getDisplayText}
-                loading={loading}
-            />
-            <div className="text-lg text-gray-600">
-                <span className="bg-gray-300 px-2 mr-2">Jamais demandé</span>
-                <span className="bg-green-500 px-2 mr-2 text-white">100% juste</span>
-                <span className="bg-red-500 px-2 text-black">100% faux</span>
             </div>
         </div>
     );

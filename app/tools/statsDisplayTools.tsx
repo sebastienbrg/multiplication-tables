@@ -36,7 +36,7 @@ export function getMarginDisplay(responseTime: number, maxResponseTime: number) 
 
 export const getDisplayTextResponseTime = (stat: Stat, user: User) => {
     if (stat === undefined) {
-        return "-";
+        return <span role="img" aria-label="empty">🕳️</span>;
     }
     return getMarginDisplay(stat.responseTime, user.maxResponseTime)
 

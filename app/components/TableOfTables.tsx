@@ -21,51 +21,41 @@ const TableOfTables: React.FC<TableOfTablesProps> = ({ user, stats, getCellColor
             cells.push(
                 <td
                     key={j}
-                    style={{
-                        background: getCellColor(stat),
-                        color: "#222",
-                        textAlign: "center",
-                        minWidth: 60,
-                        padding: "8px 4px",
-                        border: "1px solid #ddd",
-                        fontWeight: "bold",
-                    }}
-
+                    className={`p-1 sm:p-2 text-center font-bold border border-gray-200 bg-opacity-80`}
+                    style={{ background: getCellColor(stat), color: "#222", minWidth: 32, maxWidth: 44 }}
                 >
 
-                    <span style={{ fontSize: "1.2em", color: "#555" }}>
-                        {getDisplayText(stat)}
-                    </span>
+                    {getDisplayText(stat)}
 
                 </td>
             );
         }
         rows.push(
-            <tr key={i}>
-                <th style={{ textAlign: "right", paddingRight: 8 }}>{i} ×</th>
+            <tr key={i} className="hover:bg-blue-50 transition">
+                <th className="text-right pr-2 bg-blue-50 text-blue-900 font-semibold border border-gray-200">{i}</th>
                 {cells}
             </tr>
         );
     }
     return (
-        <div>
+        <div className="overflow-x-auto w-full">
             {loading ? <Loader /> : (
-                <table style={{ borderCollapse: "collapse", margin: "1em 0" }}>
+                <table className="border-collapse w-full text-center bg-white rounded-lg shadow overflow-hidden">
                     <thead>
                         <tr>
-                            <th></th>
+                            <th className="bg-blue-100 text-gray-700 font-semibold p-2"></th>
                             {Array.from({ length: 8 }, (_, i) => (
-
-                                <th key={i + 2} style={{ textAlign: "center" }}>{i + 2}</th>
+                                <th key={i + 2} className="bg-blue-100 text-gray-700 font-semibold p-2">{i + 2}</th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody>{rows}</tbody>
+                    <tbody>
+                        {rows}
+                    </tbody>
                 </table>
             )}
         </div>
     );
 };
-
 
 export default TableOfTables;
