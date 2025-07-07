@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
 import UserStats from "./UserStats";
 import { AppState, User } from "../appState";
+import { Loader } from "./Loader";
 
 interface SelectUserProps {
     appState: AppState;
     setAppState: (newState: AppState | ((prevState: AppState) => AppState)) => void;
 }
-
-const Loader = () => (
-    <div className="flex items-center justify-center h-32">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600"></div>
-    </div>
-);
-
 
 const SelectUser: React.FC<SelectUserProps> = ({ setAppState }) => {
     const [users, setUsers] = useState<User[]>([]);

@@ -7,10 +7,9 @@ export type QuizState = {
     answer: string;
     showResult: boolean;
     correct: boolean;
-    timer: number;
-    resultSent: boolean;
+    timedOut: boolean;
+    responseTime: number;
     readyForNext: boolean;
-    running: boolean;
     testSessionId: number
     score: number;
 };

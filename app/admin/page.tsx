@@ -8,6 +8,7 @@ interface User {
     maxTable: number;
     password: string;
     maxResponseTime: number;
+    targetResponseTime: number;
 }
 
 const AdminPage: React.FC = () => {
@@ -18,6 +19,7 @@ const AdminPage: React.FC = () => {
     const [minTable, setMinTable] = useState<number>(2);
     const [maxTable, setMaxTable] = useState<number>(9);
     const [maxResponseTime, setMaxResponseTime] = useState<number>(9);
+    const [targetResponseTime, setTargetResponseTime] = useState<number>(3);
     const [password, setPassword] = useState<string>('');
     const [addingUser, setAddingUser] = useState(false);
 
@@ -49,13 +51,14 @@ const AdminPage: React.FC = () => {
         setMaxTable(user.maxTable);
         setPassword(user.password);
         setMaxResponseTime(user.maxResponseTime);
+        setTargetResponseTime(user.targetResponseTime);
     };
 
     const saveEdit = async (user: User) => {
         const res = await fetch("/api/users", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: user.name, minTable, maxTable, maxResponseTime, password }),
+            body: JSON.stringify({ name: user.name, minTable, maxTable, maxResponseTime, targetResponseTime, password }),
         });
         if (!res.ok) {
             alert("Failed to update user");
@@ -116,6 +119,7 @@ const AdminPage: React.FC = () => {
                             <th className="p-2">minTable</th>
                             <th className="p-2">maxTable</th>
                             <th className="p-2">Temps max (s)</th>
+                            <th className="p-2">Temps cible (s)</th>
                             <th className="p-2">Mot de passe</th>
                             <th className="p-2">Actions</th>
                         </tr>
@@ -165,6 +169,19 @@ const AdminPage: React.FC = () => {
                                         />
                                     ) : (
                                         user.maxResponseTime
+                                    )}
+                                </td>
+                                <td className="p-2">
+                                    {editUser === user.name ? (
+                                        <input
+                                            type="text"
+                                            value={targetResponseTime}
+                                            onChange={e => setTargetResponseTime(Number(e.target.value))}
+                                            placeholder="Temps cible (s)"
+                                            className="border rounded px-2 w-32"
+                                        />
+                                    ) : (
+                                        user.targetResponseTime
                                     )}
                                 </td>
                                 <td className="p-2">

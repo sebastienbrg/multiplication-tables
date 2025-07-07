@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import SelectUser from "./components/SelectUser";
 
-import ResultPhase from "./components/ResultPhase";
+import SessionResultViewer from "./components/SessionResultViewer";
 import { AppState } from "./appState";
 import QuizPhase, { getInitialQuizzState } from "./components/quizzComponant";
 import { QuizState } from "./quizzState";
@@ -17,7 +17,7 @@ const InitialAppState: AppState = {
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>({ ...InitialAppState });
-  const [quizzState, setQuizzState] = React.useState<QuizState>(getInitialQuizzState(appState.user?.maxResponseTime || TimeToRespond));
+  const [quizzState, setQuizzState] = React.useState<QuizState>(getInitialQuizzState());
 
   // UI rendering
   if (appState.step === "select-user") {
@@ -33,7 +33,7 @@ export default function Home() {
       setQuizzState={setQuizzState}
     />;
   } else if (appState.step === "result") {
-    return <ResultPhase
+    return <SessionResultViewer
       quizzState={quizzState}
       appState={appState}
       onRestart={() => {
@@ -42,12 +42,12 @@ export default function Home() {
           step: "quiz",
         }));
 
-        const newQuizState = getInitialQuizzState(appState.user?.maxResponseTime || TimeToRespond);
+        const newQuizState = getInitialQuizzState();
         setQuizzState(newQuizState);
       }}
       onFinish={() => {
         setAppState(InitialAppState);
-        setQuizzState(getInitialQuizzState(appState.user?.maxResponseTime || TimeToRespond));
+        setQuizzState(getInitialQuizzState());
       }}
     />;
   }

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
         res.cookies.set(COOKIE_NAME, PASSWORD, {
             httpOnly: true,
             path: '/',
-            maxAge: 60 * 60 * 24 * 7, // 1 week
+            maxAge: 60 * 60 * 24 * 365, // 1 year
         });
         return res;
     }

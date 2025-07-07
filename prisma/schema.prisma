@@ -16,6 +16,7 @@ model User {
   minTable  Int
   maxTable  Int
   maxResponseTime Int @default(9)
+  targetResponseTime Int @default(3)
   password  String @default("")
   results   Result[] @relation("UserResults")
   TestSession TestSession[] @relation("UserResults")
