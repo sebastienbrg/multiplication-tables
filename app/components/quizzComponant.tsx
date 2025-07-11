@@ -107,6 +107,7 @@ const QuizPhase: React.FC<QuizPhaseProps> = ({
         const { questions, testSessionId } = await fetchMultiplication(user);
         newQuizz.testSessionId = testSessionId;
         newQuizz.questions = questions;
+        setQuestionStartTime(Date.now());
         return setState(newQuizz);
     };
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 const prisma: PrismaClient = new PrismaClient();
@@ -7,6 +7,96 @@ const Session_Size = 16;
 const AddingNice = 4; //questions to add if not enough
 const MemoryLen = 14; //days
 
+
+async function getSessionOperationsForUser(user: User) {
+    const userId: number = user.id;
+    const results: { a: number, b: number, responseTime: number }[] = await prisma.$queryRaw`
+  SELECT DISTINCT ON (r.a, r.b) r.a, r.b, r."responseTime"
+  FROM "Result" r
+  WHERE r."userId" = ${userId}
+  ORDER BY r.a, r.b, r.id DESC
+`
+    const easyResults = [];
+    const hardResults = [];
+    const workingOnResults = [];
+    const maxSeen: { a: number, b: number } = { a: 2, b: 1 };
+    for (const result of results) {
+        const responseTime = result.responseTime || user.maxResponseTime;
+        if (responseTime <= user.targetResponseTime + 1.01) {
+            easyResults.push({ a: result.a, b: result.b, responseTime });
+        } else if (responseTime >= Math.min(user.maxResponseTime, user.targetResponseTime * 1.5)) {
+            hardResults.push({ a: result.a, b: result.b, responseTime });
+        } else {
+            workingOnResults.push({ a: result.a, b: result.b, responseTime });
+        }
+        if (result.a > maxSeen.a) {
+            maxSeen.a = result.a;
+            maxSeen.b = result.b;
+        } else if (result.a === maxSeen.a && result.b > maxSeen.b) {
+            maxSeen.b = result.b;
+        }
+    }
+    const availableEasy = easyResults.length;
+    const hardsToAdd = Math.max(0, Session_Size - AddingNice);
+
+    const selection = [];
+    if (availableEasy > 0) {
+        const randomEasys = easyResults.sort(() => Math.random() - 0.5).slice(0, Math.min(AddingNice, availableEasy));
+        selection.push(...randomEasys);
+    }
+    if (hardsToAdd > 0) {
+        const randomHards = hardResults.sort(() => Math.random() - 0.5).slice(0, hardsToAdd);
+        selection.push(...randomHards);
+    }
+    const workingOnToAdd = Math.max(0, Session_Size - selection.length);
+    if (workingOnToAdd > 0) {
+        const randomWorkingOn = workingOnResults.sort(() => Math.random() - 0.5).slice(0, workingOnToAdd);
+        selection.push(...randomWorkingOn);
+    }
+    if (selection.length < Session_Size) {
+        if (maxSeen.b === 9) {
+            maxSeen.b = 1;
+            maxSeen.a += 1;
+        }
+        for (let a = maxSeen.a; a <= user.maxTable; a++) {
+            for (let b = 2; b <= 9; b++) {
+                if (a === maxSeen.a && b <= maxSeen.b) continue;
+                const key = a * 100 + b; // Unique key for each multiplication
+                if (!selection.some(q => q.a * 100 + q.b === key)) {
+                    selection.push({ a, b, responseTime: user.maxResponseTime });
+                }
+                if (selection.length >= Session_Size) {
+                    break;
+                }
+            }
+            if (selection.length >= Session_Size) {
+                break;
+            }
+        }
+    }
+    if (selection.length < Session_Size) {
+        const randomEasys = easyResults.sort(() => Math.random() - 0.5).slice(0, Session_Size - selection.length);
+        selection.push(...randomEasys);
+    }
+    // Shuffle the selection
+    selection.sort(() => Math.random() - 0.5);
+    // Limit to Session_Size
+    console.log({
+        easyResults,
+        hardResults,
+        workingOnResults,
+        maxSeen,
+        selectionBeforeLimit: selection,
+        availableEasy,
+        hardsToAdd,
+        workingOnToAdd,
+        Session_Size,
+        AddingNice,
+        MemoryLen,
+        user
+    });
+    return selection.slice(0, Session_Size);
+}
 
 // Return a random multiplication for a user
 export async function GET(req: NextRequest) {
@@ -24,83 +114,9 @@ export async function GET(req: NextRequest) {
     if (!dbUser) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    const questions: { a: number, b: number, sortKey?: number }[] = [];
-
     // Create a new test session
     const testSession = await prisma.testSession.create({ data: { userId: dbUser.id, } });
+    const questions: { a: number, b: number }[] = await getSessionOperationsForUser(dbUser)
 
-    // Grab all results for this user
-    return prisma.result.groupBy({
-        by: ['a', 'b', 'correct'],
-        where: { userId: dbUser.id, createdAt: { gte: new Date(Date.now() - 24 * MemoryLen * 60 * 60 * 1000) } },
-        _count: { correct: true },
-
-    }).then(results => {
-        const resultMap = new Map<number, { correctCount: number, errorCount: number }>();
-        for (const result of results) {
-            const key = result.a * 100 + result.b; // Unique key for each multiplication
-            if (!resultMap.has(key)) {
-                resultMap.set(key, { correctCount: 0, errorCount: 0 });
-            }
-            const entry = resultMap.get(key);
-            if (!entry) continue; // Should not happen, but just in case
-            if (result.correct) {
-                entry.correctCount += result._count.correct;
-            } else {
-                entry.errorCount += result._count.correct;
-            }
-        }
-        const potentialNice: { a: number, b: number, sortKey?: number }[] = [];
-        for (let a = dbUser.minTable; a <= dbUser.maxTable; a++) {
-            for (let b = 2; b <= 9; b++) {
-                const key = a * 100 + b; // Unique key for each multiplication
-                const entry = resultMap.get(key);
-                if (!entry || (entry.errorCount >= entry.correctCount)) {
-                    // If no results or more errors than correct, add to questions
-                    questions.push({ a, b, sortKey: Math.random() });
-                } else {
-                    potentialNice.push({ a, b, sortKey: Math.random() });
-                }
-                if (questions.length >= Session_Size) {
-                    // If we already have enough questions, stop
-                    break;
-                }
-            }
-            if (questions.length >= Session_Size) {
-                // If we already have enough questions, stop
-                break;
-            }
-        }
-
-
-        // sort potentialNice by sortKey
-        potentialNice.sort((q1, q2) => {
-            if (q1.sortKey && q2.sortKey) {
-                return q1.sortKey - q2.sortKey;
-            }
-            return 0; // If sortKey is not defined, keep original order
-        });
-
-        // Add some nice questions        
-        const needed = Math.max(Session_Size - questions.length, AddingNice);
-        for (let i = 0; i < needed && i < potentialNice.length; i++) {
-            questions.push(potentialNice[i]);
-        }
-        // randomize the questions
-        questions.sort((q1, q2) => {
-            if (q1.sortKey && q2.sortKey) {
-                return q1.sortKey - q2.sortKey;
-            }
-            return 0; // If sortKey is not defined, keep original order
-        });
-
-        questions.forEach(q => {
-            delete q.sortKey; // Remove sortKey before returning    
-        }
-        );
-        return NextResponse.json({ questions: questions.slice(0, Session_Size), testSessionId: testSession.id }, { status: 200 });
-    });
-
-
-
-}
+    return NextResponse.json({ questions: questions.slice(0, Session_Size), testSessionId: testSession.id }, { status: 200 });
+};
